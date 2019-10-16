@@ -59,7 +59,7 @@ func Execute() {
 func init() {
 	cobra.OnInitialize(initConfig)
 
-	rootCmd.Flags().StringP("listen", "l", ":8443", "HTTPS Port to listen [$KVW_PORT]")
+	rootCmd.Flags().StringP("listen", "l", ":8443", "HTTPS Port to listen [$KVW_LISTEN]")
 	rootCmd.Flags().StringP("cert", "c", "", "HTTPS certificate file (required) [$KVW_CERT]")
 	rootCmd.Flags().StringP("key", "k", "", "HTTPS key file (required) [$KVW_KEY]")
 	rootCmd.Flags().StringP("vault-addr", "v", "", "Vault address (required) [$KVW_VAULT-ADDR]")
