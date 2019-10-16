@@ -1,6 +1,7 @@
 package api
 
 import (
+	"bytes"
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
@@ -9,8 +10,9 @@ import (
 	"net/http"
 	"regexp"
 	"strings"
+	"text/template"
 
-	"github.com/valyala/fasttemplate"
+	"github.com/Masterminds/sprig/v3"
 	"k8s.io/api/admission/v1beta1"
 	corev1 "k8s.io/api/core/v1"
 )
@@ -112,14 +114,29 @@ func (s *Server) secretHandler(w http.ResponseWriter, r *http.Request) {
 		secretPath := sub[1]
 		secretKey := sub[2]
 
-		t := fasttemplate.New(s.VaultPattern, "{{", "}}")
-		pattern := t.ExecuteString(map[string]interface{}{"namespace": secret.Namespace})
-		vaultSecretPath := fmt.Sprintf("%s/data/%s/%s", s.VaultBackend, pattern, secretPath)
+		// Template vault secret path
+		pathTemplate, err := template.New("path").Funcs(sprig.TxtFuncMap()).Parse(s.VaultPattern)
+		if err != nil {
+			log.Printf("failed to template vault pauth: %s", err)
+			http.Error(w, http.StatusText(500), 500)
+			return
+		}
+
+		var vaultSecretPath bytes.Buffer
+		pathTemplate.Execute(&vaultSecretPath, struct {
+			Name      string
+			Namespace string
+			Secret    string
+		}{
+			Name:      secret.Name,      // Kubernetes secret name
+			Namespace: secret.Namespace, // Kubernetes secret namespace
+			Secret:    secretPath,       // Kubernetes secret parsed value
+		})
 
 		// Read secret from Vault
-		vaultSecretValue, err := s.Vault.Read(vaultSecretPath, secretKey)
+		vaultSecretValue, err := s.Vault.Read(vaultSecretPath.String(), secretKey)
 		if err != nil {
-			log.Printf("failed to read secret %q in vault: %s", pattern, err)
+			log.Printf("failed to read secret %q in vault: %s", s.VaultPattern, err)
 			http.Error(w, http.StatusText(500), 500)
 			return
 		}
