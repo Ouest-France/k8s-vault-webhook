@@ -18,7 +18,7 @@ var rootCmd = &cobra.Command{
 	PreRunE: func(cmd *cobra.Command, args []string) error {
 
 		// Checks all required params are set
-		required := []string{"cert", "key", "vault-addr", "vault-token", "vault-backend"}
+		required := []string{"cert", "key", "vault-addr", "vault-token"}
 		for _, param := range required {
 			if viper.GetString(param) == "" {
 				return fmt.Errorf("required parameter %q is not defined", param)
@@ -42,7 +42,6 @@ var rootCmd = &cobra.Command{
 			Cert:         viper.GetString("cert"),
 			Key:          viper.GetString("key"),
 			Vault:        vc,
-			VaultBackend: viper.GetString("vault-backend"),
 			VaultPattern: viper.GetString("vault-pattern"),
 		}
 
@@ -64,10 +63,9 @@ func init() {
 	rootCmd.Flags().StringP("key", "k", "", "HTTPS key file (required) [$KVW_KEY]")
 	rootCmd.Flags().StringP("vault-addr", "v", "", "Vault address (required) [$KVW_VAULT-ADDR]")
 	rootCmd.Flags().StringP("vault-token", "t", "", "Vault token path (required) [$KVW_VAULT-TOKEN]")
-	rootCmd.Flags().StringP("vault-backend", "b", "", "Vault secret backend path (required) [$KVW_VAULT-BACKEND]")
 	rootCmd.Flags().StringP("vault-pattern", "p", "{{namespace}}", "Vault search pattern [$KVW_VAULT-PATTERN]")
 
-	flags := []string{"listen", "cert", "key", "vault-addr", "vault-token", "vault-backend", "vault-pattern"}
+	flags := []string{"listen", "cert", "key", "vault-addr", "vault-token", "vault-pattern"}
 	for _, flag := range flags {
 		err := viper.BindPFlag(flag, rootCmd.Flags().Lookup(flag))
 		if err != nil {

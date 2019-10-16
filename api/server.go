@@ -14,7 +14,6 @@ type Server struct {
 	Cert         string
 	Key          string
 	Vault        vault.Client
-	VaultBackend string
 	VaultPattern string
 }
 
