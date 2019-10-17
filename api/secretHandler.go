@@ -117,7 +117,7 @@ func (s *Server) secretHandler(w http.ResponseWriter, r *http.Request) {
 		// Template vault secret path
 		pathTemplate, err := template.New("path").Funcs(sprig.TxtFuncMap()).Parse(s.VaultPattern)
 		if err != nil {
-			log.Printf("failed to template vault pauth: %s", err)
+			log.Printf("failed to template vault path: %s", err)
 			http.Error(w, http.StatusText(500), 500)
 			return
 		}
