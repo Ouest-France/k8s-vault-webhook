@@ -5,9 +5,17 @@ image:
   tag: latest
   pullPolicy: Always
 
+serviceAccount: k8s-vault-webhook
+
 vault:
-  address: https://vault.ouest-france.fr
-  token: /srv/token
+  address: http://127.0.0.1:8200
+  agent:
+    auth_mount: kubernetes
+    role: k8s-vault-webhook
+  pattern: secret/data/{{.Namespace}}/{{.Secret}}
+
+webhook:
+  failurePolicy: Fail
 
 nameOverride: ""
 fullnameOverride: ""

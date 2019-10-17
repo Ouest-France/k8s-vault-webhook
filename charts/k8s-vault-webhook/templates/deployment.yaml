@@ -19,7 +19,17 @@ spec:
         app.kubernetes.io/name: {{ include "k8s-vault-webhook.name" . }}
         app.kubernetes.io/instance: {{ .Release.Name }}
     spec:
+      serviceAccountName: {{ .Values.serviceAccount }}
       containers:
+        - name: vault-agent
+          image: vault:1.2.3
+          volumeMounts:
+            - mountPath: /srv/vaultconfig
+              name: vault-agent-config
+            - mountPath: /srv/vaulttoken
+              name: vault-token
+          command: ["vault"]
+          args: ["agent", "-config=/srv/vaultconfig/vault-agent.cfg"]
         - name: {{ .Chart.Name }}
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
@@ -31,12 +41,14 @@ spec:
             - name: KVW_VAULT-ADDR
               value: {{ .Values.vault.address }}
             - name: KVW_VAULT-TOKEN
-              value: /srv/vault/token
+              value: /srv/vaulttoken/token
             - name: KVW_VAULT-PATTERN
               value: {{ .Values.vault.pattern | quote }}
           volumeMounts:
             - mountPath: /srv/certificates
               name: certificates
+            - mountPath: /srv/vaulttoken
+              name: vault-token
           ports:
             - name: http
               containerPort: 8443
@@ -56,6 +68,11 @@ spec:
           secret:
             defaultMode: 420
             secretName: {{ template "k8s-vault-webhook.fullname" . }}
+        - name: vault-agent-config
+          configMap:
+            name: {{ template "k8s-vault-webhook.fullname" . }}-vault-agent
+        - name: vault-token
+          emptyDir: {}
       {{- with .Values.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}

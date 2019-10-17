@@ -1,0 +1,25 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ template "k8s-vault-webhook.fullname" . }}-vault-agent
+  namespace: {{ .Release.Namespace }}
+data:
+  vault-agent.cfg: |
+    vault {
+      address = "{{ .Values.vault.address }}"
+    }
+
+    auto_auth {
+      method "kubernetes" {
+        mount_path = "auth/{{ .Values.vault.agent.auth_mount }}"
+        config {
+          role = "{{ .Values.vault.agent.role }}"
+        }
+      }
+
+      sink "file" {
+        config = {
+          path = "/srv/vaulttoken/token"
+        }
+      }
+    }
