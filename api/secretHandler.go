@@ -117,13 +117,13 @@ func (s *Server) secretHandler(w http.ResponseWriter, r *http.Request) {
 		// Template vault secret path
 		pathTemplate, err := template.New("path").Funcs(sprig.TxtFuncMap()).Parse(s.VaultPattern)
 		if err != nil {
-			log.Printf("failed to template vault path: %s", err)
+			log.Printf("failed to parse template vault path: %s", err)
 			http.Error(w, http.StatusText(500), 500)
 			return
 		}
 
 		var vaultSecretPath bytes.Buffer
-		pathTemplate.Execute(&vaultSecretPath, struct {
+		err = pathTemplate.Execute(&vaultSecretPath, struct {
 			Name      string
 			Namespace string
 			Secret    string
@@ -132,6 +132,11 @@ func (s *Server) secretHandler(w http.ResponseWriter, r *http.Request) {
 			Namespace: secret.Namespace, // Kubernetes secret namespace
 			Secret:    secretPath,       // Kubernetes secret parsed value
 		})
+		if err != nil {
+			log.Printf("failed to execute template vault path: %s", err)
+			http.Error(w, http.StatusText(500), 500)
+			return
+		}
 
 		// Read secret from Vault
 		vaultSecretValue, err := s.Vault.Read(vaultSecretPath.String(), secretKey)
