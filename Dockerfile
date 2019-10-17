@@ -18,7 +18,7 @@ RUN go mod download
 COPY . .
 
 # Build the Go app
-RUN CGO_ENABLED=0 go build -ldflags="-extldflags '-static'" -o k8s-vault-webhook
+RUN CGO_ENABLED=0 go build -ldflags="-extldflags '-static' -w -s" -o k8s-vault-webhook
 
 #####
 # Run stage
@@ -27,6 +27,9 @@ FROM scratch
 
 # Copy compiled static binary
 COPY --from=builder /go/src/github.com/Ouest-France/k8s-vault-webhook/k8s-vault-webhook /k8s-vault-webhook
+
+# Import CA certificates
+COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
 
 # Expose default port
 EXPOSE 8443
