@@ -16,6 +16,9 @@ vault:
 
 webhook:
   failurePolicy: Fail
+  namespaceSelector:
+    matchLabels: {}
+    matchExpressions: []
 
 nameOverride: ""
 fullnameOverride: ""

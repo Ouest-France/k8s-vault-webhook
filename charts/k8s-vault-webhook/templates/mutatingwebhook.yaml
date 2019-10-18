@@ -45,13 +45,13 @@ items:
       - secrets
     failurePolicy: {{ .Values.webhook.failurePolicy }}
     namespaceSelector:
-    {{- if .Values.namespaceSelector.matchLabels }}
+    {{- if .Values.webhook.namespaceSelector.matchLabels }}
       matchLabels:
-{{ toYaml .Values.namespaceSelector.matchLabels | indent 8 }}
+{{ toYaml .Values.webhook.namespaceSelector.matchLabels | indent 8 }}
     {{- end }}
       matchExpressions:
-    {{- if .Values.namespaceSelector.matchExpressions }}
-{{ toYaml .Values.namespaceSelector.matchExpressions | indent 6 }}
+    {{- if .Values.webhook.namespaceSelector.matchExpressions }}
+{{ toYaml .Values.webhook.namespaceSelector.matchExpressions | indent 6 }}
     {{- end }}
       - key: name
         operator: NotIn
