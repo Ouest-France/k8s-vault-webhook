@@ -57,6 +57,7 @@ spec:
             httpGet:
               path: /status
               port: http
+              scheme: https
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
       volumes:
