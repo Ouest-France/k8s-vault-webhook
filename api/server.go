@@ -23,6 +23,7 @@ func (s *Server) Serve() error {
 	router.Use(middleware.Logger)
 
 	router.Post("/secret", s.secretHandler)
+	router.Get("/status", s.statusHandler)
 
 	log.Printf("Webhook started, listening on %s", s.Listen)
 	err := http.ListenAndServeTLS(s.Listen, s.Cert, s.Key, router)

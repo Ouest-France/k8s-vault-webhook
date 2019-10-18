@@ -6,6 +6,7 @@ require (
 	github.com/Masterminds/semver v1.5.0 // indirect
 	github.com/Masterminds/sprig/v3 v3.0.0
 	github.com/go-chi/chi v4.0.2+incompatible
+	github.com/go-chi/render v1.0.1
 	github.com/hashicorp/nomad/api v0.0.0-20191014142341-0371664d03bd // indirect
 	github.com/hashicorp/vault/api v1.0.4
 	github.com/imdario/mergo v0.3.8 // indirect
