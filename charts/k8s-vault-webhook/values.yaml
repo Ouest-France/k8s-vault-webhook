@@ -24,7 +24,7 @@ service:
   type: ClusterIP
   port: 443
 
-resources: {}
+resources:
   limits:
     cpu: 100m
     memory: 128Mi
