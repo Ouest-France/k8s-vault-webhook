@@ -13,6 +13,13 @@ vault:
     auth_mount: kubernetes
     role: k8s-vault-webhook
   pattern: secret/data/{{.Namespace}}/{{.Secret}}
+  resources:
+    limits:
+      cpu: 100m
+      memory: 128Mi
+    requests:
+      cpu: 100m
+      memory: 64Mi
 
 webhook:
   failurePolicy: Fail
