@@ -6,7 +6,7 @@ import (
 
 	"github.com/Ouest-France/k8s-vault-webhook/api"
 	"github.com/Ouest-France/k8s-vault-webhook/vault"
-
+	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -37,12 +37,16 @@ var rootCmd = &cobra.Command{
 			return fmt.Errorf("failed to create new vault client: %s", err)
 		}
 
+		logger := logrus.New()
+		logger.SetLevel(logrus.DebugLevel)
+
 		server := api.Server{
 			Listen:       viper.GetString("listen"),
 			Cert:         viper.GetString("cert"),
 			Key:          viper.GetString("key"),
 			Vault:        vc,
 			VaultPattern: viper.GetString("vault-pattern"),
+			Logger:       logger,
 		}
 
 		return server.Serve()
