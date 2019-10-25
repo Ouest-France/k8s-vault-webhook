@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/Ouest-France/k8s-vault-webhook/vault"
 	"github.com/go-chi/chi"
 	"github.com/sirupsen/logrus"
 )
@@ -13,9 +12,13 @@ type Server struct {
 	Listen       string
 	Cert         string
 	Key          string
-	Vault        vault.Client
+	Vault        VaultClient
 	VaultPattern string
 	Logger       *logrus.Logger
+}
+
+type VaultClient interface {
+	Read(path, key string) (string, error)
 }
 
 func (s *Server) Serve() error {
