@@ -46,6 +46,8 @@ spec:
               value: /srv/vaulttoken/token
             - name: KVW_VAULT-PATTERN
               value: {{ .Values.vault.pattern | quote }}
+            - name: KVW_LOGLEVEL
+              value: {{ .Values.webhook.loglevel }}
           volumeMounts:
             - mountPath: /srv/certificates
               name: certificates

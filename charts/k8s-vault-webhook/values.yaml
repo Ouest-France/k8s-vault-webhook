@@ -26,6 +26,7 @@ webhook:
   namespaceSelector:
     matchLabels: {}
     matchExpressions: []
+  loglevel: info
 
 nameOverride: ""
 fullnameOverride: ""
