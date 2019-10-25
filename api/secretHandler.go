@@ -2,7 +2,6 @@ package api
 
 import (
 	"encoding/json"
-	"fmt"
 	"io/ioutil"
 	"net/http"
 
@@ -57,7 +56,6 @@ func (s *Server) secretHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Parse secret object
-	fmt.Println(string(admissionReview.Request.Object.Raw))
 	var secret corev1.Secret
 	err = json.Unmarshal(admissionReview.Request.Object.Raw, &secret)
 	if err != nil {

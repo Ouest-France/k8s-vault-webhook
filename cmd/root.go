@@ -38,10 +38,14 @@ var rootCmd = &cobra.Command{
 		}
 
 		logger := logrus.New()
-		logger.SetLevel(logrus.DebugLevel)
+		level, err := logrus.ParseLevel(viper.GetString("loglevel"))
+		if err != nil {
+			return fmt.Errorf("failed to parse loglevel: %s", err)
+		}
+		logger.SetLevel(level)
 
 		server := api.Server{
-			Listen:       viper.GetString("listen"),
+			Listen:       viper.GetString("address"),
 			Cert:         viper.GetString("cert"),
 			Key:          viper.GetString("key"),
 			Vault:        vc,
@@ -62,14 +66,15 @@ func Execute() {
 func init() {
 	cobra.OnInitialize(initConfig)
 
-	rootCmd.Flags().StringP("listen", "l", ":8443", "HTTPS Port to listen [$KVW_LISTEN]")
+	rootCmd.Flags().StringP("address", "a", ":8443", "HTTPS Port to listen [$KVW_LISTEN]")
 	rootCmd.Flags().StringP("cert", "c", "", "HTTPS certificate file (required) [$KVW_CERT]")
 	rootCmd.Flags().StringP("key", "k", "", "HTTPS key file (required) [$KVW_KEY]")
 	rootCmd.Flags().StringP("vault-addr", "v", "", "Vault address (required) [$KVW_VAULT-ADDR]")
 	rootCmd.Flags().StringP("vault-token", "t", "", "Vault token path (required) [$KVW_VAULT-TOKEN]")
 	rootCmd.Flags().StringP("vault-pattern", "p", "{{namespace}}", "Vault search pattern [$KVW_VAULT-PATTERN]")
+	rootCmd.Flags().StringP("loglevel", "l", "info", "Webhook loglevel [$KVW_LOGLEVEL]")
 
-	flags := []string{"listen", "cert", "key", "vault-addr", "vault-token", "vault-pattern"}
+	flags := []string{"address", "cert", "key", "vault-addr", "vault-token", "vault-pattern", "loglevel"}
 	for _, flag := range flags {
 		err := viper.BindPFlag(flag, rootCmd.Flags().Lookup(flag))
 		if err != nil {
