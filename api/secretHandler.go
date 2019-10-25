@@ -164,6 +164,8 @@ func (s *Server) secretHandler(w http.ResponseWriter, r *http.Request) {
 	s.sendAdmissionReview(w, admissionReview)
 }
 
+// sendAdmissionReviewError create an admission review with an
+// error set as response message and write it to http.ResponseWriter
 func (s *Server) sendAdmissionReviewError(w http.ResponseWriter, err error) {
 
 	ar := v1beta1.AdmissionReview{
@@ -193,6 +195,7 @@ func (s *Server) sendAdmissionReviewError(w http.ResponseWriter, err error) {
 	}
 }
 
+// sendAdmissionReview masharl and write to http.ResponseWriter an admission review
 func (s *Server) sendAdmissionReview(w http.ResponseWriter, ar v1beta1.AdmissionReview) {
 
 	resp, err := json.Marshal(ar)
