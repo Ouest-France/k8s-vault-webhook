@@ -14,6 +14,7 @@ import (
 	"github.com/Masterminds/sprig/v3"
 	"k8s.io/api/admission/v1beta1"
 	corev1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 type patchOperation struct {
@@ -48,19 +49,7 @@ func (s *Server) secretHandler(w http.ResponseWriter, r *http.Request) {
 	if admissionReview.Kind != "AdmissionReview" || admissionReview.APIVersion != "admission.k8s.io/v1beta1" {
 
 		s.Logger.Debug("not an admissionreview request, ignoring")
-
-		resp, err := json.Marshal(admissionReview)
-		if err != nil {
-			s.Logger.Errorf("failed to marshal response: %s", err)
-			http.Error(w, http.StatusText(500), 500)
-			return
-		}
-
-		_, err = w.Write(resp)
-		if err != nil {
-			s.Logger.Errorf("failed to write response: %s", err)
-			return
-		}
+		s.sendAdmissionReview(w, admissionReview)
 
 		return
 	}
@@ -69,19 +58,7 @@ func (s *Server) secretHandler(w http.ResponseWriter, r *http.Request) {
 	if admissionReview.Request.Kind.Kind != "Secret" || admissionReview.Request.Kind.Version != "v1" {
 
 		s.Logger.Debug("not a secret object, ignoring")
-
-		resp, err := json.Marshal(admissionReview)
-		if err != nil {
-			s.Logger.Errorf("failed to marshal response: %s", err)
-			http.Error(w, http.StatusText(500), 500)
-			return
-		}
-
-		_, err = w.Write(resp)
-		if err != nil {
-			s.Logger.Errorf("failed to write response: %s", err)
-			return
-		}
+		s.sendAdmissionReview(w, admissionReview)
 
 		return
 	}
@@ -111,8 +88,8 @@ func (s *Server) secretHandler(w http.ResponseWriter, r *http.Request) {
 		re := regexp.MustCompile(`^vault:(.*)#(.*)$`)
 		sub := re.FindStringSubmatch(string(val))
 		if len(sub) != 3 {
-			s.Logger.Errorf("invalid vault path no regex match")
-			http.Error(w, http.StatusText(500), 500)
+			s.Logger.Errorf("vault placeholder '%s' doesn't match regex '^vault:(.*)#(.*)$'", string(val))
+			s.sendAdmissionReviewError(w, fmt.Errorf("vault placeholder '%s' doesn't match regex '^vault:(.*)#(.*)$'", string(val)))
 			return
 		}
 		secretPath := sub[1]
@@ -121,7 +98,7 @@ func (s *Server) secretHandler(w http.ResponseWriter, r *http.Request) {
 		// Template vault secret path
 		pathTemplate, err := template.New("path").Funcs(sprig.TxtFuncMap()).Parse(s.VaultPattern)
 		if err != nil {
-			s.Logger.Errorf("failed to parse template vault path: %s", err)
+			s.Logger.Errorf("failed to parse template vault path pattern: %s", err)
 			http.Error(w, http.StatusText(500), 500)
 			return
 		}
@@ -137,7 +114,7 @@ func (s *Server) secretHandler(w http.ResponseWriter, r *http.Request) {
 			Secret:    secretPath,       // Kubernetes secret parsed value
 		})
 		if err != nil {
-			s.Logger.Errorf("failed to execute template vault path: %s", err)
+			s.Logger.Errorf("failed to execute template function on vault path pattern: %s", err)
 			http.Error(w, http.StatusText(500), 500)
 			return
 		}
@@ -145,8 +122,8 @@ func (s *Server) secretHandler(w http.ResponseWriter, r *http.Request) {
 		// Read secret from Vault
 		vaultSecretValue, err := s.Vault.Read(vaultSecretPath.String(), secretKey)
 		if err != nil {
-			s.Logger.Errorf("failed to read secret '%s' in vault: %s", s.VaultPattern, err)
-			http.Error(w, http.StatusText(500), 500)
+			s.Logger.Errorf("failed to read secret '%s' in vault: %s", vaultSecretPath.String(), err)
+			s.sendAdmissionReviewError(w, fmt.Errorf("failed to read secret '%s' in vault: %s", vaultSecretPath.String(), err))
 			return
 		}
 
@@ -159,6 +136,10 @@ func (s *Server) secretHandler(w http.ResponseWriter, r *http.Request) {
 				Value: base64.StdEncoding.EncodeToString([]byte(vaultSecretValue)),
 			},
 		)
+
+		s.Logger.Infof(
+			"kubernetes secret '%s' key '%s' in namespace '%s', replaced by vault secret '%s' key '%s'",
+			secret.Name, key, secret.Namespace, vaultSecretPath.String(), secretKey)
 	}
 
 	// Marshal patches
@@ -179,18 +160,51 @@ func (s *Server) secretHandler(w http.ResponseWriter, r *http.Request) {
 		}(),
 	}
 
+	// Send admission review back to kubernetes
+	s.sendAdmissionReview(w, admissionReview)
+}
+
+func (s *Server) sendAdmissionReviewError(w http.ResponseWriter, err error) {
+
+	ar := v1beta1.AdmissionReview{
+		Response: &v1beta1.AdmissionResponse{
+			Result: &metav1.Status{
+				Message: err.Error(),
+			},
+		},
+	}
+
 	// Marshal admission review with response
-	resp, err := json.Marshal(admissionReview)
+	arResp, err := json.Marshal(ar)
 	if err != nil {
 		s.Logger.Errorf("failed to marshal response: %s", err)
 		http.Error(w, http.StatusText(500), 500)
 		return
 	}
 
+	// Set http code
+	w.WriteHeader(500)
+
 	// Send admission review back to kubernetes
+	_, err = w.Write(arResp)
+	if err != nil {
+		s.Logger.Errorf("failed to write response: %s", err)
+		return
+	}
+}
+
+func (s *Server) sendAdmissionReview(w http.ResponseWriter, ar v1beta1.AdmissionReview) {
+
+	resp, err := json.Marshal(ar)
+	if err != nil {
+		s.Logger.Errorf("failed to marshal response: %s", err)
+		http.Error(w, http.StatusText(500), 500)
+		return
+	}
+
 	_, err = w.Write(resp)
 	if err != nil {
-		s.Logger.Errorf("failed to write response")
+		s.Logger.Errorf("failed to write admission review response: %s", err)
 		return
 	}
 }
