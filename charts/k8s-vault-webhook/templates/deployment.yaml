@@ -31,7 +31,7 @@ spec:
           command: ["vault"]
           args: ["agent", "-config=/srv/vaultconfig/vault-agent.cfg"]
           resources:
-            {{- toYaml .Values.vault-agent.resources | nindent 12 }}
+            {{- toYaml .Values.vault.agent.resources | nindent 12 }}
         - name: {{ .Chart.Name }}
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}

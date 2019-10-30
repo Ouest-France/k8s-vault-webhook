@@ -12,6 +12,16 @@ loglevel: info
 vault:
   address: http://127.0.0.1:8200
   pattern: secret/data/{{.Namespace}}/{{.Secret}}
+  agent:
+    mount: kubernetes
+    role: k8s-vault-webhook
+    resources:
+      limits:
+        cpu: 100m
+        memory: 128Mi
+      requests:
+        cpu: 100m
+        memory: 64Mi
 
 resources:
   limits:
@@ -26,17 +36,6 @@ nodeSelector: {}
 tolerations: []
 
 affinity: {}
-
-vault-agent:
-  mount: kubernetes
-  role: k8s-vault-webhook
-  resources:
-    limits:
-      cpu: 100m
-      memory: 128Mi
-    requests:
-      cpu: 100m
-      memory: 64Mi
 
 webhook:
   failurePolicy: Fail

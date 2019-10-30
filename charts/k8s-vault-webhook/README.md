@@ -57,12 +57,12 @@ The following table lists the configurable parameters of the k8s-vault-webhook c
 | `resources.limits.memory`                     | k8s-vault-webhook container memory limit                        | `128Mi`                                                      |
 | `resources.requests.cpu`                      | k8s-vault-webhook container cpu request                         | `100m`                                                       |
 | `resources.requests.memory`                   | k8s-vault-webhook container memory request                      | `64Mi`                                                       |
-| `vault-agent.mount`                           | vault kubernetes auth mount name                                | `kubernetes`                                                 |
-| `vault-agent.role`                            | vault kubernetes auth role                                      | `k8s-vault-webhook`                                          |
-| `vault-agent.resources.limits.cpu`            | vault-agent container cpu limit                                 | `100m`                                                       |
-| `vault-agent.resources.limits.memory`         | vault-agent container memory limit                              | `128Mi`                                                      |
-| `vault-agent.resources.requests.cpu`          | vault-agent container cpu request                               | `100m`                                                       |
-| `vault-agent.resources.requests.memory`       | vault-agent container memory request                            | `64Mi`                                                       |
+| `vault.agent.mount`                           | vault kubernetes auth mount name                                | `kubernetes`                                                 |
+| `vault.agent.role`                            | vault kubernetes auth role                                      | `k8s-vault-webhook`                                          |
+| `vault.agent.resources.limits.cpu`            | vault-agent container cpu limit                                 | `100m`                                                       |
+| `vault.agent.resources.limits.memory`         | vault-agent container memory limit                              | `128Mi`                                                      |
+| `vault.agent.resources.requests.cpu`          | vault-agent container cpu request                               | `100m`                                                       |
+| `vault.agent.resources.requests.memory`       | vault-agent container memory request                            | `64Mi`                                                       |
 | `webhook.failurePolicy`                       | mutating webhook failure policy                                 | `Fail`                                                       |
 | `webhook.namespaceSelector.matchLabels`       | mutating webhook labels for namespace selector                  | `{}`                                                         |
 | `webhook.namespaceSelector.matchExpressions`  | mutating webhook expressions for namespace selector             | `[]`                                                         |

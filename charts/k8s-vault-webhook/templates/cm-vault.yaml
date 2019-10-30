@@ -11,9 +11,9 @@ data:
 
     auto_auth {
       method "kubernetes" {
-        mount_path = "auth/{{ .Values.vault-agent.mount }}"
+        mount_path = "auth/{{ .Values.vault.agent.mount }}"
         config {
-          role = "{{ .Values.vault-agent.role }}"
+          role = "{{ .Values.vault.agent.role }}"
         }
       }
 
