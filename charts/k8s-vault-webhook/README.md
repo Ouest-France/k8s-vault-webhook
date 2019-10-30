@@ -45,31 +45,31 @@ The following table lists the configurable parameters of the k8s-vault-webhook c
 
 |            Parameter                          |                                  Description                    |                           Default                            |
 | --------------------------------------------- | --------------------------------------------------------------- | ------------------------------------------------------------ |
-| `replicaCount`                                | number of pod replicas                                          | `1`                                                          |
+| `replicaCount`                                | number of pod replicas                                          | `2`                                                          |
+| `serviceAccount`                              | service account name                                            | `k8s-vault-webhook`                                          |
 | `image.repository`                            | k8s-vault-webhook image repository                              | `ouestfrance/k8s-vault-webhook`                              |
 | `image.tag`                                   | k8s-vault-webhook image tag                                     | `latest`                                                     |
 | `image.pullPolicy`                            | k8s-vault-webhook image pull policy                             | `Always`                                                     |
-| `serviceAccount`                              | service account name                                            | `k8s-vault-webhook`                                          |
-| `vault.address`                               | vault server address                                            | `http://127.0.0.1:8200`                                      |
-| `vault.agent.auth_mount`                      | vault kubernetes auth mount name                                | `kubernetes`                                                 |
-| `vault.agent.role`                            | vault kubernetes auth role                                      | `k8s-vault-webhook`                                          |
-| `vault.pattern`                               | k8s-vault-webhook vault path template pattern                   | `secret/data/{{.Namespace}}/{{.Secret}}`                     |
-| `vault.resources.limits.cpu`                  | vault-agent container cpu limit                                 | `100m`                                                       |
-| `vault.resources.limits.memory`               | vault-agent container memory limit                              | `128Mi`                                                      |
-| `vault.resources.requests.cpu`                | vault-agent container cpu request                               | `100m`                                                       |
-| `vault.resources.requests.memory`             | vault-agent container memory request                            | `64Mi`                                                       |
-| `webhook.failurePolicy`                       | mutating webhook failure policy                                 | `Fail`                                                       |
-| `webhook.namespaceSelector.matchLabels`       | mutating webhook labels for namespace selector                  | `{}`                                                         |
-| `webhook.namespaceSelector.matchExpressions`  | mutating webhook expressions for namespace selector             | `[]`                                                         |
 | `webhook.loglevel`                            | k8s-vault-webhook log level                                     | `info`                                                       |
-| `nameOverride`                                | chart name override                                             | ``                                                           |
-| `fullnameOverride`                            | chart fullname override                                         | ``                                                           |
-| `service.type`                                | service type                                                    | `ClusterIP`                                                  |
-| `service.port`                                | service port                                                    | `443`                                                        |
+| `vault.address`                               | vault server address                                            | `http://127.0.0.1:8200`                                      |
+| `vault.pattern`                               | k8s-vault-webhook vault path template pattern                   | `secret/data/{{.Namespace}}/{{.Secret}}`                     |
 | `resources.limits.cpu`                        | k8s-vault-webhook container cpu limit                           | `100m`                                                       |
 | `resources.limits.memory`                     | k8s-vault-webhook container memory limit                        | `128Mi`                                                      |
 | `resources.requests.cpu`                      | k8s-vault-webhook container cpu request                         | `100m`                                                       |
 | `resources.requests.memory`                   | k8s-vault-webhook container memory request                      | `64Mi`                                                       |
+| `vault-agent.mount`                           | vault kubernetes auth mount name                                | `kubernetes`                                                 |
+| `vault-agent.role`                            | vault kubernetes auth role                                      | `k8s-vault-webhook`                                          |
+| `vault-agent.resources.limits.cpu`            | vault-agent container cpu limit                                 | `100m`                                                       |
+| `vault-agent.resources.limits.memory`         | vault-agent container memory limit                              | `128Mi`                                                      |
+| `vault-agent.resources.requests.cpu`          | vault-agent container cpu request                               | `100m`                                                       |
+| `vault-agent.resources.requests.memory`       | vault-agent container memory request                            | `64Mi`                                                       |
+| `webhook.failurePolicy`                       | mutating webhook failure policy                                 | `Fail`                                                       |
+| `webhook.namespaceSelector.matchLabels`       | mutating webhook labels for namespace selector                  | `{}`                                                         |
+| `webhook.namespaceSelector.matchExpressions`  | mutating webhook expressions for namespace selector             | `[]`                                                         |
+| `nameOverride`                                | chart name override                                             | ``                                                           |
+| `fullnameOverride`                            | chart fullname override                                         | ``                                                           |
+| `service.type`                                | service type                                                    | `ClusterIP`                                                  |
+| `service.port`                                | service port                                                    | `443`                                                        |
 | `nodeSelector`                                | pod node selector                                               | `{}`                                                         |
 | `tolerations`                                 | pod tolerations                                                 | `[]`                                                         |
 | `affinity`                                    | pod affinity                                                    | `{}`                                                         |

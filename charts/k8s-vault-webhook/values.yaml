@@ -1,39 +1,17 @@
-replicaCount: 1
+replicaCount: 2
+
+serviceAccount: k8s-vault-webhook
 
 image:
   repository: ouestfrance/k8s-vault-webhook
   tag: latest
   pullPolicy: Always
 
-serviceAccount: k8s-vault-webhook
+loglevel: info
 
 vault:
   address: http://127.0.0.1:8200
-  agent:
-    auth_mount: kubernetes
-    role: k8s-vault-webhook
   pattern: secret/data/{{.Namespace}}/{{.Secret}}
-  resources:
-    limits:
-      cpu: 100m
-      memory: 128Mi
-    requests:
-      cpu: 100m
-      memory: 64Mi
-
-webhook:
-  failurePolicy: Fail
-  namespaceSelector:
-    matchLabels: {}
-    matchExpressions: []
-  loglevel: info
-
-nameOverride: ""
-fullnameOverride: ""
-
-service:
-  type: ClusterIP
-  port: 443
 
 resources:
   limits:
@@ -48,3 +26,27 @@ nodeSelector: {}
 tolerations: []
 
 affinity: {}
+
+vault-agent:
+  mount: kubernetes
+  role: k8s-vault-webhook
+  resources:
+    limits:
+      cpu: 100m
+      memory: 128Mi
+    requests:
+      cpu: 100m
+      memory: 64Mi
+
+webhook:
+  failurePolicy: Fail
+  namespaceSelector:
+    matchLabels: {}
+    matchExpressions: []
+
+nameOverride: ""
+fullnameOverride: ""
+
+service:
+  type: ClusterIP
+  port: 443
