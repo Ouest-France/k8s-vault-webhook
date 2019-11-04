@@ -3,12 +3,14 @@ package api
 import (
 	"bytes"
 	"encoding/base64"
+	"errors"
 	"fmt"
 	"regexp"
 	"strings"
 	"text/template"
 
 	"github.com/Masterminds/sprig/v3"
+	"github.com/sirupsen/logrus"
 	corev1 "k8s.io/api/core/v1"
 )
 
@@ -22,9 +24,15 @@ func (s *Server) mutateSecretData(secret corev1.Secret) ([]patchOperation, error
 	// Check each data key for secret to mutate
 	for k8sSecretKey, k8sSecretValue := range secret.Data {
 
+		logger := s.Logger.WithFields(logrus.Fields{
+			"kubernetes_secret_name":      secret.Name,
+			"kubernetes_secret_namespace": secret.Namespace,
+			"kubernetes_secret_key":       k8sSecretKey,
+		})
+
 		// Ignore if no "vault:" prefix on secret value
 		if !strings.HasPrefix(string(k8sSecretValue), "vault:") {
-			s.Logger.Debugf("value of key '%s' doesn't start by 'vault:', ignoring", k8sSecretKey)
+			logger.Debug("value doesn't have 'vault:' prefix, ignoring")
 			continue
 		}
 
@@ -32,6 +40,7 @@ func (s *Server) mutateSecretData(secret corev1.Secret) ([]patchOperation, error
 		re := regexp.MustCompile(`^vault:(.*)#(.*)$`)
 		sub := re.FindStringSubmatch(string(k8sSecretValue))
 		if len(sub) != 3 {
+			logger.Errorf("vault placeholder '%s' doesn't match regex '^vault:(.*)#(.*)$'", string(k8sSecretValue))
 			return []patchOperation{}, fmt.Errorf("vault placeholder '%s' doesn't match regex '^vault:(.*)#(.*)$'", string(k8sSecretValue))
 		}
 		vaultRawSecretPath := sub[1]
@@ -40,14 +49,16 @@ func (s *Server) mutateSecretData(secret corev1.Secret) ([]patchOperation, error
 		// Check that required fields are not empty
 		for key, val := range map[string]string{"name": secret.Name, "namespace": secret.Namespace} {
 			if val == "" {
-				return []patchOperation{}, fmt.Errorf("secret field %s cannot be empty", key)
+				logger.Errorf("secret field %s cannot be empty", key)
+				return []patchOperation{}, fmt.Errorf("secret attribute %s cannot be empty", key)
 			}
 		}
 
 		// Template vault secret path
 		pathTemplate, err := template.New("path").Funcs(sprig.TxtFuncMap()).Parse(s.VaultPattern)
 		if err != nil {
-			return []patchOperation{}, fmt.Errorf("failed to parse template vault path pattern: %s", err)
+			logger.WithError(err).Errorf("failed to parse template vault path pattern")
+			return []patchOperation{}, errors.New("failed to parse template vault path pattern")
 		}
 
 		var vaultSecretPath bytes.Buffer
@@ -61,12 +72,19 @@ func (s *Server) mutateSecretData(secret corev1.Secret) ([]patchOperation, error
 			Secret:    vaultRawSecretPath, // Kubernetes secret parsed value
 		})
 		if err != nil {
-			return []patchOperation{}, fmt.Errorf("failed to execute template function on vault path pattern: %s", err)
+			logger.WithError(err).Error("failed to execute template function on vault path pattern")
+			return []patchOperation{}, errors.New("failed to execute template function on vault path pattern")
 		}
+
+		logger = logger.WithFields(logrus.Fields{
+			"vault_secret_path": vaultSecretPath.String(),
+			"vault_secret_key":  vaultSecretKey,
+		})
 
 		// Read secret from Vault
 		vaultSecretValue, err := s.Vault.Read(vaultSecretPath.String(), vaultSecretKey)
 		if err != nil {
+			logger.WithError(err).Error("failed to read secret in vault")
 			return []patchOperation{}, fmt.Errorf("failed to read secret '%s' in vault: %s", vaultSecretPath.String(), err)
 		}
 
@@ -80,9 +98,7 @@ func (s *Server) mutateSecretData(secret corev1.Secret) ([]patchOperation, error
 			},
 		)
 
-		s.Logger.Infof(
-			"kubernetes secret '%s' key '%s' in namespace '%s', replaced by vault secret '%s' key '%s'",
-			secret.Name, k8sSecretKey, secret.Namespace, vaultSecretPath.String(), vaultSecretKey)
+		logger.Info("kubernetes secret mutated with vault value")
 	}
 
 	return patch, nil

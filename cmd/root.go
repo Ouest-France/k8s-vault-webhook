@@ -25,6 +25,19 @@ var rootCmd = &cobra.Command{
 			}
 		}
 
+		// Check logformat
+		valid := func() bool {
+			for _, validFormat := range []string{"text", "json"} {
+				if viper.GetString("logformat") == validFormat {
+					return true
+				}
+			}
+			return false
+		}()
+		if !valid {
+			return fmt.Errorf("logformat is '%s', must be 'text' or 'json'", viper.GetString("logformat"))
+		}
+
 		return nil
 	},
 	RunE: func(cmd *cobra.Command, args []string) error {
@@ -37,12 +50,23 @@ var rootCmd = &cobra.Command{
 			return fmt.Errorf("failed to create new vault client: %s", err)
 		}
 
+		// Setup logger
 		logger := logrus.New()
 		level, err := logrus.ParseLevel(viper.GetString("loglevel"))
 		if err != nil {
 			return fmt.Errorf("failed to parse loglevel: %s", err)
 		}
 		logger.SetLevel(level)
+		formatter := map[string]logrus.Formatter{
+			"text": &logrus.TextFormatter{},
+			"json": &logrus.JSONFormatter{FieldMap: logrus.FieldMap{
+				logrus.FieldKeyTime:  "timestamp",
+				logrus.FieldKeyLevel: "level",
+				logrus.FieldKeyMsg:   "message",
+				logrus.FieldKeyFunc:  "caller",
+			}},
+		}
+		logger.SetFormatter(formatter[viper.GetString("logformat")])
 
 		server := api.Server{
 			Listen:       viper.GetString("address"),
@@ -73,8 +97,9 @@ func init() {
 	rootCmd.Flags().StringP("vault-token", "t", "", "Vault token path (required) [$KVW_VAULT-TOKEN]")
 	rootCmd.Flags().StringP("vault-pattern", "p", "{{namespace}}", "Vault search pattern [$KVW_VAULT-PATTERN]")
 	rootCmd.Flags().StringP("loglevel", "l", "info", "Webhook loglevel [$KVW_LOGLEVEL]")
+	rootCmd.Flags().StringP("logformat", "f", "text", "Webhook logformat (text or json) [$KVW_LOGFORMAT]")
 
-	flags := []string{"address", "cert", "key", "vault-addr", "vault-token", "vault-pattern", "loglevel"}
+	flags := []string{"address", "cert", "key", "vault-addr", "vault-token", "vault-pattern", "loglevel", "logformat"}
 	for _, flag := range flags {
 		err := viper.BindPFlag(flag, rootCmd.Flags().Lookup(flag))
 		if err != nil {
