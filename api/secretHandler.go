@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"net/http"
 
+	"github.com/sirupsen/logrus"
 	"k8s.io/api/admission/v1beta1"
 	corev1 "k8s.io/api/core/v1"
 )
@@ -17,12 +18,13 @@ type patchOperation struct {
 
 func (s *Server) secretHandler(w http.ResponseWriter, r *http.Request) {
 
-	s.Logger.Debug("secret request received, handling")
+	logger := s.Logger.WithField("handler", "secret")
+	logger.Debug("request received, handling")
 
 	// Read request body
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
-		s.Logger.Errorf("failed read request body: %s", err)
+		logger.WithError(err).Error("failed to read request body")
 		http.Error(w, http.StatusText(500), 500)
 		return
 	}
@@ -32,24 +34,34 @@ func (s *Server) secretHandler(w http.ResponseWriter, r *http.Request) {
 	var admissionReview v1beta1.AdmissionReview
 	err = json.Unmarshal(body, &admissionReview)
 	if err != nil {
-		s.Logger.Errorf("failed to unmarshal request: %s", err)
+		logger.WithError(err).Error("failed to unmarshal request")
 		http.Error(w, http.StatusText(500), 500)
 		return
 	}
 
+	logger = logger.WithFields(logrus.Fields{
+		"kubernetes_admissionreview_kind":       admissionReview.Kind,
+		"kubernetes_admissionreview_apiversion": admissionReview.APIVersion,
+	})
+
 	// Validate admission request type
 	if admissionReview.Kind != "AdmissionReview" || admissionReview.APIVersion != "admission.k8s.io/v1beta1" {
 
-		s.Logger.Debug("not an admissionreview request, ignoring")
+		logger.Debug("not an admissionreview request, ignoring")
 		s.sendAdmissionReview(w, admissionReview)
 
 		return
 	}
 
+	logger = logger.WithFields(logrus.Fields{
+		"kubernetes_admissionreview_request_kind":       admissionReview.Request.Kind,
+		"kubernetes_admissionreview_request_apiversion": admissionReview.Request.Kind.Version,
+	})
+
 	// Validate object type
 	if admissionReview.Request.Kind.Kind != "Secret" || admissionReview.Request.Kind.Version != "v1" {
 
-		s.Logger.Debug("not a secret object, ignoring")
+		logger.Debug("not a secret object, ignoring")
 		s.sendAdmissionReview(w, admissionReview)
 
 		return
@@ -59,15 +71,19 @@ func (s *Server) secretHandler(w http.ResponseWriter, r *http.Request) {
 	var secret corev1.Secret
 	err = json.Unmarshal(admissionReview.Request.Object.Raw, &secret)
 	if err != nil {
-		s.Logger.Errorf("failed to unmarshal secret: %s", err)
+		logger.WithError(err).Error("failed to unmarshal secret")
 		http.Error(w, http.StatusText(500), 500)
 		return
 	}
 
+	logger = logger.WithFields(logrus.Fields{
+		"kubernetes_secret_name":      secret.Name,
+		"kubernetes_secret_namespace": secret.Namespace,
+	})
+
 	// List of patchs on secret
 	patch, err := s.mutateSecretData(secret)
 	if err != nil {
-		s.Logger.Error(err)
 		s.sendAdmissionReviewError(w, err)
 		return
 	}
@@ -75,7 +91,7 @@ func (s *Server) secretHandler(w http.ResponseWriter, r *http.Request) {
 	// Marshal patches
 	patchBytes, err := json.Marshal(patch)
 	if err != nil {
-		s.Logger.Errorf("failed marshal patches: %s", err)
+		logger.WithError(err).Error("failed to marshal patches")
 		http.Error(w, http.StatusText(500), 500)
 		return
 	}

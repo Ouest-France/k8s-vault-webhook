@@ -48,6 +48,8 @@ spec:
               value: {{ .Values.vault.pattern | quote }}
             - name: KVW_LOGLEVEL
               value: {{ .Values.loglevel }}
+            - name: KVW_LOGFORMAT
+              value: {{ .Values.logformat }}
           volumeMounts:
             - mountPath: /srv/certificates
               name: certificates
