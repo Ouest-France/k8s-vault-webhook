@@ -50,6 +50,8 @@ spec:
               value: {{ .Values.loglevel }}
             - name: KVW_LOGFORMAT
               value: {{ .Values.logformat }}
+            - name: KVW_BASICAUTH
+              value: {{ .Values.basicauth | join "," }}
           volumeMounts:
             - mountPath: /srv/certificates
               name: certificates
