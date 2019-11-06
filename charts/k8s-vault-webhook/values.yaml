@@ -10,6 +10,8 @@ image:
 loglevel: info
 logformat: json
 
+basicauth: []
+
 vault:
   address: http://127.0.0.1:8200
   pattern: secret/data/{{.Namespace}}/{{.Secret}}

@@ -1,8 +1,10 @@
 package cmd
 
 import (
+	"errors"
 	"fmt"
 	"os"
+	"regexp"
 
 	"github.com/Ouest-France/k8s-vault-webhook/api"
 	"github.com/Ouest-France/k8s-vault-webhook/vault"
@@ -26,7 +28,7 @@ var rootCmd = &cobra.Command{
 		}
 
 		// Check logformat
-		valid := func() bool {
+		validLogformat := func() bool {
 			for _, validFormat := range []string{"text", "json"} {
 				if viper.GetString("logformat") == validFormat {
 					return true
@@ -34,8 +36,23 @@ var rootCmd = &cobra.Command{
 			}
 			return false
 		}()
-		if !valid {
+		if !validLogformat {
 			return fmt.Errorf("logformat is '%s', must be 'text' or 'json'", viper.GetString("logformat"))
+		}
+
+		// Check basicauth
+		validBasicauth := func() bool {
+			re := regexp.MustCompile(`^.+:.+$`)
+
+			for _, userpass := range viper.GetStringSlice("basicauth") {
+				if !re.MatchString(userpass) {
+					return false
+				}
+			}
+			return true
+		}()
+		if !validBasicauth {
+			return errors.New("basicauth entries must match '^.+:.+$' regex")
 		}
 
 		return nil
@@ -75,6 +92,7 @@ var rootCmd = &cobra.Command{
 			Vault:        vc,
 			VaultPattern: viper.GetString("vault-pattern"),
 			Logger:       logger,
+			BasicAuth:    viper.GetStringSlice("basicauth"),
 		}
 
 		return server.Serve()
@@ -98,8 +116,9 @@ func init() {
 	rootCmd.Flags().StringP("vault-pattern", "p", "{{namespace}}", "Vault search pattern [$KVW_VAULT-PATTERN]")
 	rootCmd.Flags().StringP("loglevel", "l", "info", "Webhook loglevel [$KVW_LOGLEVEL]")
 	rootCmd.Flags().StringP("logformat", "f", "text", "Webhook logformat (text or json) [$KVW_LOGFORMAT]")
+	rootCmd.Flags().StringSliceP("basicauth", "b", []string{}, "Basic auth list of user:hashed_pass [$KVW_BASICAUTH]")
 
-	flags := []string{"address", "cert", "key", "vault-addr", "vault-token", "vault-pattern", "loglevel", "logformat"}
+	flags := []string{"address", "cert", "key", "vault-addr", "vault-token", "vault-pattern", "loglevel", "logformat", "basicauth"}
 	for _, flag := range flags {
 		err := viper.BindPFlag(flag, rootCmd.Flags().Lookup(flag))
 		if err != nil {

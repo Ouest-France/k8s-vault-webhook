@@ -52,6 +52,7 @@ The following table lists the configurable parameters of the k8s-vault-webhook c
 | `image.pullPolicy`                            | k8s-vault-webhook image pull policy                             | `Always`                                                     |
 | `loglevel`                                    | k8s-vault-webhook log level                                     | `info`                                                       |
 | `logformat`                                   | k8s-vault-webhook log format (json or text)                     | `json`                                                       |
+| `basicauth`                                   | k8s-vault-webhook basicauth list of authorized users            | `[]`                                                         |
 | `vault.address`                               | vault server address                                            | `http://127.0.0.1:8200`                                      |
 | `vault.pattern`                               | k8s-vault-webhook vault path template pattern                   | `secret/data/{{.Namespace}}/{{.Secret}}`                     |
 | `resources.limits.cpu`                        | k8s-vault-webhook container cpu limit                           | `100m`                                                       |
