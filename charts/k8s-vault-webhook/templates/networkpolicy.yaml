@@ -1,0 +1,21 @@
+{{- if .Values.networkPolicy.enabled }}
+kind: NetworkPolicy
+apiVersion: networking.k8s.io/v1
+metadata:
+  name: {{ include "k8s-vault-webhook.fullname" . }}
+  labels:
+    app.kubernetes.io/name: {{ include "k8s-vault-webhook.name" . }}
+    helm.sh/chart: {{ include "k8s-vault-webhook.chart" . }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+spec:
+  podSelector:
+    matchLabels:
+      app: {{ include "k8s-vault-webhook.name" . }}
+      release: "{{ .Release.Name }}"
+  ingress:
+      from: 
+      - podSelector:
+          matchLabels:
+            {{ .Values.networkPolicy.matchLabel }}: {{ .Values.networkPolicy.matchValue }}
+{{- end }}

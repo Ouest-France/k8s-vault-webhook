@@ -72,6 +72,9 @@ The following table lists the configurable parameters of the k8s-vault-webhook c
 | `fullnameOverride`                            | chart fullname override                                         | ``                                                           |
 | `service.type`                                | service type                                                    | `ClusterIP`                                                  |
 | `service.port`                                | service port                                                    | `443`                                                        |
+| `networkPolicy.enabled`                       | create pod network policy                                       | `false`                                                      |
+| `networkPolicy.matchLabel`                    | network policy match label                                      | `k8s-app`                                                    |
+| `networkPolicy.matchValue`                    | network policy match value                                      | `kube-apiserver`                                       |
 | `nodeSelector`                                | pod node selector                                               | `{}`                                                         |
 | `tolerations`                                 | pod tolerations                                                 | `[]`                                                         |
 | `affinity`                                    | pod affinity                                                    | `{}`                                                         |
