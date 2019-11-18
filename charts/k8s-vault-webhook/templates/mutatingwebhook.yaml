@@ -57,4 +57,3 @@ items:
         operator: NotIn
         values:
         - {{ .Release.Namespace }}
-    sideEffects: NoneOnDryRun
