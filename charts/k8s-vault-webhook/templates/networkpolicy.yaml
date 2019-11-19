@@ -14,8 +14,8 @@ spec:
       app: {{ include "k8s-vault-webhook.name" . }}
       release: "{{ .Release.Name }}"
   ingress:
-      from: 
-      - podSelector:
-          matchLabels:
-            {{ .Values.networkPolicy.matchLabel }}: {{ .Values.networkPolicy.matchValue }}
+  - from: 
+    - podSelector:
+        matchLabels:
+          {{ .Values.networkPolicy.matchLabel }}: {{ .Values.networkPolicy.matchValue }}
 {{- end }}
