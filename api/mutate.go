@@ -33,6 +33,7 @@ func (s *Server) mutateSecretData(secret corev1.Secret) ([]patchOperation, error
 		// Ignore if no "vault:" prefix on secret value
 		if !strings.HasPrefix(string(k8sSecretValue), "vault:") {
 			logger.Debug("value doesn't have 'vault:' prefix, ignoring")
+			secretIgnored.Inc()
 			continue
 		}
 
@@ -41,6 +42,7 @@ func (s *Server) mutateSecretData(secret corev1.Secret) ([]patchOperation, error
 		sub := re.FindStringSubmatch(string(k8sSecretValue))
 		if len(sub) != 3 {
 			logger.Errorf("vault placeholder '%s' doesn't match regex '^vault:(.*)#(.*)$'", string(k8sSecretValue))
+			secretFailed.Inc()
 			return []patchOperation{}, fmt.Errorf("vault placeholder '%s' doesn't match regex '^vault:(.*)#(.*)$'", string(k8sSecretValue))
 		}
 		vaultRawSecretPath := sub[1]
@@ -50,6 +52,7 @@ func (s *Server) mutateSecretData(secret corev1.Secret) ([]patchOperation, error
 		for key, val := range map[string]string{"name": secret.Name, "namespace": secret.Namespace} {
 			if val == "" {
 				logger.Errorf("secret field %s cannot be empty", key)
+				secretFailed.Inc()
 				return []patchOperation{}, fmt.Errorf("secret attribute %s cannot be empty", key)
 			}
 		}
@@ -58,6 +61,7 @@ func (s *Server) mutateSecretData(secret corev1.Secret) ([]patchOperation, error
 		pathTemplate, err := template.New("path").Funcs(sprig.TxtFuncMap()).Parse(s.VaultPattern)
 		if err != nil {
 			logger.WithError(err).Errorf("failed to parse template vault path pattern")
+			secretFailed.Inc()
 			return []patchOperation{}, errors.New("failed to parse template vault path pattern")
 		}
 
@@ -73,6 +77,7 @@ func (s *Server) mutateSecretData(secret corev1.Secret) ([]patchOperation, error
 		})
 		if err != nil {
 			logger.WithError(err).Error("failed to execute template function on vault path pattern")
+			secretFailed.Inc()
 			return []patchOperation{}, errors.New("failed to execute template function on vault path pattern")
 		}
 
@@ -85,6 +90,7 @@ func (s *Server) mutateSecretData(secret corev1.Secret) ([]patchOperation, error
 		vaultSecretValue, err := s.Vault.Read(vaultSecretPath.String(), vaultSecretKey)
 		if err != nil {
 			logger.WithError(err).Error("failed to read secret in vault")
+			secretFailed.Inc()
 			return []patchOperation{}, fmt.Errorf("failed to read secret '%s' in vault: %s", vaultSecretPath.String(), err)
 		}
 
@@ -97,6 +103,8 @@ func (s *Server) mutateSecretData(secret corev1.Secret) ([]patchOperation, error
 				Value: base64.StdEncoding.EncodeToString([]byte(vaultSecretValue)),
 			},
 		)
+
+		secretMutated.Inc()
 
 		logger.Info("kubernetes secret mutated with vault value")
 	}

@@ -26,6 +26,7 @@ func (s *Server) secretHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		logger.WithError(err).Error("failed to read request body")
 		http.Error(w, http.StatusText(500), 500)
+		secretFailed.Inc()
 		return
 	}
 	defer r.Body.Close()
@@ -36,6 +37,7 @@ func (s *Server) secretHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		logger.WithError(err).Error("failed to unmarshal request")
 		http.Error(w, http.StatusText(500), 500)
+		secretFailed.Inc()
 		return
 	}
 
@@ -49,6 +51,7 @@ func (s *Server) secretHandler(w http.ResponseWriter, r *http.Request) {
 
 		logger.Debug("not an admissionreview request, ignoring")
 		s.sendAdmissionReview(w, admissionReview)
+		secretIgnored.Inc()
 
 		return
 	}
@@ -63,6 +66,7 @@ func (s *Server) secretHandler(w http.ResponseWriter, r *http.Request) {
 
 		logger.Debug("not a secret object, ignoring")
 		s.sendAdmissionReview(w, admissionReview)
+		secretIgnored.Inc()
 
 		return
 	}
@@ -73,6 +77,7 @@ func (s *Server) secretHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		logger.WithError(err).Error("failed to unmarshal secret")
 		http.Error(w, http.StatusText(500), 500)
+		secretFailed.Inc()
 		return
 	}
 
@@ -85,6 +90,7 @@ func (s *Server) secretHandler(w http.ResponseWriter, r *http.Request) {
 	patch, err := s.mutateSecretData(secret)
 	if err != nil {
 		s.sendAdmissionReviewError(w, err)
+		secretFailed.Inc()
 		return
 	}
 
@@ -93,6 +99,7 @@ func (s *Server) secretHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		logger.WithError(err).Error("failed to marshal patches")
 		http.Error(w, http.StatusText(500), 500)
+		secretFailed.Inc()
 		return
 	}
 
