@@ -9,6 +9,7 @@ require (
 	github.com/hashicorp/vault/api v1.0.4
 	github.com/howeyc/gopass v0.0.0-20190910152052-7cb4b85ec19c
 	github.com/imdario/mergo v0.3.8 // indirect
+	github.com/prometheus/client_golang v0.9.3
 	github.com/sirupsen/logrus v1.2.0
 	github.com/spf13/cobra v0.0.5
 	github.com/spf13/viper v1.4.0

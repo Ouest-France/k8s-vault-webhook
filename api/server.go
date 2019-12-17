@@ -6,8 +6,18 @@ import (
 	"strings"
 
 	"github.com/go-chi/chi"
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promauto"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/sirupsen/logrus"
 	"golang.org/x/crypto/bcrypt"
+)
+
+var (
+	requestReceived = promauto.NewCounter(prometheus.CounterOpts{Name: "webhook_request_received", Help: "The total number of requests received"})
+	secretMutated   = promauto.NewCounter(prometheus.CounterOpts{Name: "webhook_secret_mutated", Help: "The total number of secrets successfuly mutated"})
+	secretIgnored   = promauto.NewCounter(prometheus.CounterOpts{Name: "webhook_secret_ignored", Help: "The total number of mutating requests ignored"})
+	secretFailed    = promauto.NewCounter(prometheus.CounterOpts{Name: "webhook_secret_failed", Help: "The total number of mutating requests failed"})
 )
 
 type Server struct {
@@ -38,8 +48,10 @@ func (s *Server) Serve() error {
 func (s *Server) Router() *chi.Mux {
 	router := chi.NewRouter()
 	router.Use(s.RequestLogger)
+	router.Use(s.RequestCounter)
 
 	router.Get("/status", s.statusHandler)
+	router.Get("/metrics", promhttp.Handler().ServeHTTP)
 	router.Group(func(router chi.Router) {
 		router.Use(s.RequestAuth)
 		router.Post("/secret", s.secretHandler)
@@ -57,6 +69,15 @@ func (s *Server) RequestLogger(next http.Handler) http.Handler {
 			"host":   r.Host,
 		}).Debug("request processed")
 
+		next.ServeHTTP(w, r)
+	}
+
+	return http.HandlerFunc(fn)
+}
+
+func (s *Server) RequestCounter(next http.Handler) http.Handler {
+	fn := func(w http.ResponseWriter, r *http.Request) {
+		requestReceived.Inc()
 		next.ServeHTTP(w, r)
 	}
 
