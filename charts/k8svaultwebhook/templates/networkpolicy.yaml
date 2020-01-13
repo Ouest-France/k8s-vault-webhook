@@ -4,15 +4,15 @@ apiVersion: networking.k8s.io/v1
 metadata:
   name: {{ include "k8s-vault-webhook.fullname" . }}
   labels:
-    app.kubernetes.io/name: {{ include "k8s-vault-webhook.name" . }}
-    helm.sh/chart: {{ include "k8s-vault-webhook.chart" . }}
-    app.kubernetes.io/instance: {{ .Release.Name }}
-    app.kubernetes.io/managed-by: {{ .Release.Service }}
+    app: {{ template "k8s-vault-webhook.name" . }}
+    chart: {{ .Chart.Name }}-{{ .Chart.Version }}
+    heritage: {{ .Release.Service }}
+    release: {{ .Release.Name }}
 spec:
   podSelector:
     matchLabels:
-      app: {{ include "k8s-vault-webhook.name" . }}
-      release: "{{ .Release.Name }}"
+      app: {{ template "k8s-vault-webhook.name" . }}
+      release: {{ .Release.Name }}
   ingress:
   - from: 
     - podSelector:

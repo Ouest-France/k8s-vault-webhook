@@ -4,10 +4,10 @@ metadata:
   name: {{ template "k8s-vault-webhook.fullname" . }}
   namespace: {{ .Release.Namespace }}
   labels:
-    app.kubernetes.io/name: {{ include "k8s-vault-webhook.name" . }}
-    helm.sh/chart: {{ include "k8s-vault-webhook.chart" . }}
-    app.kubernetes.io/instance: {{ .Release.Name }}
-    app.kubernetes.io/managed-by: {{ .Release.Service }}
+    app: {{ template "k8s-vault-webhook.name" . }}
+    chart: {{ .Chart.Name }}-{{ .Chart.Version }}
+    heritage: {{ .Release.Service }}
+    release: {{ .Release.Name }}
 spec:
   type: {{ .Values.service.type }}
   ports:
@@ -16,5 +16,5 @@ spec:
       protocol: TCP
       name: {{ template "k8s-vault-webhook.fullname" . }}
   selector:
-    app.kubernetes.io/name: {{ include "k8s-vault-webhook.name" . }}
-    app.kubernetes.io/instance: {{ .Release.Name }}
+    app: {{ template "k8s-vault-webhook.name" . }}
+    release: {{ .Release.Name }}

@@ -3,6 +3,11 @@ kind: ConfigMap
 metadata:
   name: {{ template "k8s-vault-webhook.fullname" . }}-vault-agent
   namespace: {{ .Release.Namespace }}
+  labels:
+    app: {{ template "k8s-vault-webhook.name" . }}
+    chart: {{ .Chart.Name }}-{{ .Chart.Version }}
+    heritage: {{ .Release.Service }}
+    release: {{ .Release.Name }}
 data:
   vault-agent.cfg: |
     vault {
