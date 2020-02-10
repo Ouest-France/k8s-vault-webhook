@@ -1,4 +1,4 @@
-{{- if .Values.networkPolicy.enabled }}
+{{ if .Values.networkPolicy.enabled }}
 kind: NetworkPolicy
 apiVersion: networking.k8s.io/v1
 metadata:
@@ -18,4 +18,9 @@ spec:
     - podSelector:
         matchLabels:
           {{ .Values.networkPolicy.matchLabel }}: {{ .Values.networkPolicy.matchValue }}
-{{- end }}
+{{ if (.Values.networkPolicy.namespaceMatchLabel) and (.Values.networkPolicy.namespaceMatchValue) }}
+      namespaceSelector:
+        matchLabels:
+          {{ .Values.networkPolicy.namespaceMatchLabel }}: {{ .Values.networkPolicy.namespaceMatchValue }}
+{{ end }}
+{{ end }}
