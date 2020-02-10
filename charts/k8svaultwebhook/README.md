@@ -67,8 +67,10 @@ The following table lists the configurable parameters of the k8s-vault-webhook c
 | `service.type`                                | service type                                                    | `ClusterIP`                                                  |
 | `service.port`                                | service port                                                    | `443`                                                        |
 | `networkPolicy.enabled`                       | create pod network policy                                       | `false`                                                      |
-| `networkPolicy.matchLabel`                    | network policy match label                                      | `k8s-app`                                                    |
-| `networkPolicy.matchValue`                    | network policy match value                                      | `kube-apiserver`                                       |
+| `networkPolicy.matchLabel`                    | network policy pod match label                                  | `k8s-app`                                                    |
+| `networkPolicy.matchValue`                    | network policy pod match value                                  | `kube-apiserver`                                             |
+| `networkPolicy.namespaceMatchLabel`           | network policy namespace match label                            | ``                                                           |
+| `networkPolicy.namespaceMatchValue`           | network policy namespace match value                            | ``                                                           |
 | `nodeSelector`                                | pod node selector                                               | `{}`                                                         |
 | `tolerations`                                 | pod tolerations                                                 | `[]`                                                         |
 | `affinity`                                    | pod affinity                                                    | `{}`                                                         |

@@ -57,3 +57,5 @@ networkPolicy:
   enabled: false
   matchLabel: k8s-app
   matchValue: kube-apiserver
+  # namespaceMatchLabel: namespace
+  # namespaceMatchValue: kube-system
