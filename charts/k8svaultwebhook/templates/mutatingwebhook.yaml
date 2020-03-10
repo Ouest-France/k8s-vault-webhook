@@ -134,6 +134,8 @@ items:
                 scheme: HTTPS
             resources:
               {{- toYaml .Values.resources | nindent 14 }}
+        securityContext:
+          {{- toYaml .Values.securityContext | nindent 10 }}
         volumes:
           - name: certificates
             secret:
