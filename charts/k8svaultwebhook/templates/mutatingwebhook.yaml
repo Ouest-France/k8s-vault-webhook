@@ -38,6 +38,7 @@ items:
         name: {{ template "k8s-vault-webhook.fullname" . }}
         path: /secret
       caBundle: {{ b64enc $ca.Cert }}
+    sideEffects: NoneOnDryRun
     rules:
     - operations:
       - CREATE
