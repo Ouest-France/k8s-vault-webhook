@@ -1,1 +1,2 @@
 *.pem
+k8s-vault-webhook
