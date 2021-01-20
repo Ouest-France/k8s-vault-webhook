@@ -7,11 +7,13 @@ import (
 	vault "github.com/hashicorp/vault/api"
 )
 
+// Client represent a Vault client with it's token
 type Client struct {
 	Client *vault.Client
 	Token  string
 }
 
+// NewClient return a Vault client with token and address configured
 func NewClient(address, tokenPath string) (Client, error) {
 	vc, err := vault.NewClient(&vault.Config{Address: address})
 	if err != nil {
@@ -21,6 +23,7 @@ func NewClient(address, tokenPath string) (Client, error) {
 	return Client{Client: vc, Token: tokenPath}, nil
 }
 
+// Read return a secret at a path and key from Vault
 func (c Client) Read(path, key string) (string, error) {
 
 	// Load token from disk
@@ -53,6 +56,7 @@ func (c Client) Read(path, key string) (string, error) {
 	return data.(string), nil
 }
 
+// refreshToken re-read Vault token from disk and update it in Client
 func (c Client) refreshToken() error {
 	token, err := ioutil.ReadFile(c.Token)
 	if err != nil {

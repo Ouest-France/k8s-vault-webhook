@@ -20,6 +20,7 @@ var (
 	secretFailed    = promauto.NewCounter(prometheus.CounterOpts{Name: "webhook_secret_failed", Help: "The total number of mutating requests failed"})
 )
 
+// Server represent vault webhook server
 type Server struct {
 	Listen       string
 	Cert         string
@@ -30,10 +31,13 @@ type Server struct {
 	BasicAuth    []string
 }
 
+// VaultClient interface validate a Vault read method
+// and allow fake implementation for testing
 type VaultClient interface {
 	Read(path, key string) (string, error)
 }
 
+// Serve is the entrypoint of the API
 func (s *Server) Serve() error {
 
 	s.Logger.Infof("webhook started, listening on %s", s.Listen)
@@ -45,6 +49,7 @@ func (s *Server) Serve() error {
 	return nil
 }
 
+// Router return a router with all API routes and middlewares
 func (s *Server) Router() *chi.Mux {
 	router := chi.NewRouter()
 	router.Use(s.RequestLogger)
@@ -60,6 +65,7 @@ func (s *Server) Router() *chi.Mux {
 	return router
 }
 
+// RequestLogger is a middleware for logging request to stdout
 func (s *Server) RequestLogger(next http.Handler) http.Handler {
 	fn := func(w http.ResponseWriter, r *http.Request) {
 		defer s.Logger.WithFields(logrus.Fields{
@@ -75,8 +81,10 @@ func (s *Server) RequestLogger(next http.Handler) http.Handler {
 	return http.HandlerFunc(fn)
 }
 
+// RequestCounter is a middleware counting requests for Prometheus metrics
 func (s *Server) RequestCounter(next http.Handler) http.Handler {
 	fn := func(w http.ResponseWriter, r *http.Request) {
+		// Increment Prometheus requestReceived counter
 		requestReceived.Inc()
 		next.ServeHTTP(w, r)
 	}
@@ -84,10 +92,14 @@ func (s *Server) RequestCounter(next http.Handler) http.Handler {
 	return http.HandlerFunc(fn)
 }
 
+// RequestAuth is a middleware checking API servers authentication through basicauth
 func (s *Server) RequestAuth(next http.Handler) http.Handler {
 	fn := func(w http.ResponseWriter, r *http.Request) {
 
+		// Only check for authentication if basicauth is set via flags or config
 		if len(s.BasicAuth) > 0 {
+
+			// Extract user/password from request
 			reqUser, reqPass, ok := r.BasicAuth()
 			if !ok {
 				s.Logger.Error("authentification failed, missing credentials")
@@ -95,13 +107,16 @@ func (s *Server) RequestAuth(next http.Handler) http.Handler {
 				return
 			}
 
+			// Check if user/password is one of defined by flags or config
 			valid := func() bool {
 				for _, cfgBasicauth := range s.BasicAuth {
+					// Extract brcypt hashed password from basicauth config
 					cfgUserPass := strings.Split(cfgBasicauth, ":")
 					if cfgUserPass[0] != reqUser {
 						continue
 					}
 
+					// Check password
 					err := bcrypt.CompareHashAndPassword([]byte(cfgUserPass[1]), []byte(reqPass))
 					if err == nil {
 						return true
