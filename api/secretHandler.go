@@ -47,7 +47,7 @@ func (s *Server) secretHandler(w http.ResponseWriter, r *http.Request) {
 	})
 
 	// Validate admission request type
-	if admissionReview.Kind != "AdmissionReview" || admissionReview.APIVersion != "admission.k8s.io/v1beta1" {
+	if admissionReview.Kind != "AdmissionReview" || admissionReview.APIVersion != "admission.k8s.io/v1" {
 
 		logger.Debug("not an admissionreview request, ignoring")
 		s.sendAdmissionReview(w, admissionReview)
