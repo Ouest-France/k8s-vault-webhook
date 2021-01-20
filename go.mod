@@ -4,7 +4,7 @@ go 1.13
 
 require (
 	github.com/Masterminds/sprig/v3 v3.2.0
-	github.com/go-chi/chi v4.0.2+incompatible
+	github.com/go-chi/chi v1.5.1
 	github.com/go-chi/render v1.0.1
 	github.com/google/uuid v1.1.5 // indirect
 	github.com/hashicorp/vault/api v1.0.4
