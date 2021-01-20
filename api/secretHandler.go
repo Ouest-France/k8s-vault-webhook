@@ -6,7 +6,7 @@ import (
 	"net/http"
 
 	"github.com/sirupsen/logrus"
-	"k8s.io/api/admission/v1beta1"
+	admission "k8s.io/api/admission/v1"
 	corev1 "k8s.io/api/core/v1"
 )
 
@@ -32,7 +32,7 @@ func (s *Server) secretHandler(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
 
 	// Parse review request
-	var admissionReview v1beta1.AdmissionReview
+	var admissionReview admission.AdmissionReview
 	err = json.Unmarshal(body, &admissionReview)
 	if err != nil {
 		logger.WithError(err).Error("failed to unmarshal request")
@@ -104,11 +104,11 @@ func (s *Server) secretHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Attach admission response to admission review
-	admissionReview.Response = &v1beta1.AdmissionResponse{
+	admissionReview.Response = &admission.AdmissionResponse{
 		Allowed: true,
 		Patch:   patchBytes,
-		PatchType: func() *v1beta1.PatchType {
-			pt := v1beta1.PatchTypeJSONPatch
+		PatchType: func() *admission.PatchType {
+			pt := admission.PatchTypeJSONPatch
 			return &pt
 		}(),
 	}
