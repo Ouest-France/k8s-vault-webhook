@@ -13,29 +13,26 @@ items:
 - apiVersion: v1
   kind: Secret
   metadata:
-    name: {{ template "k8s-vault-webhook.fullname" . }}
-    namespace: {{ .Release.Namespace }}
+    name: {{ include "k8s-vault-webhook.fullname" . }}
     labels:
-      app: {{ template "k8s-vault-webhook.name" . }}
-      chart: {{ .Chart.Name }}-{{ .Chart.Version }}
-      heritage: {{ .Release.Service }}
-      release: {{ .Release.Name }}
+      {{- include "k8s-vault-webhook.labels" . | nindent 6 }}
   data:
     cert.pem: {{ b64enc $server.Cert }}
     key.pem: {{ b64enc $server.Key }}
     ca:  {{ b64enc $ca.Cert }}
 
-- apiVersion: admissionregistration.k8s.io/v1beta1
+- apiVersion: admissionregistration.k8s.io/v1
   kind: MutatingWebhookConfiguration
   metadata:
-    name: {{ template "k8s-vault-webhook.fullname" . }}
-    namespace: {{ .Release.Namespace }}
+    name: {{ include "k8s-vault-webhook.fullname" . }}
+    labels:
+      {{- include "k8s-vault-webhook.labels" . | nindent 6 }}
   webhooks:
-  - name: secrets.{{ template "k8s-vault-webhook.name" . }}.webhook
+  - name: secrets.{{ include "k8s-vault-webhook.fullname" . }}.webhook
     clientConfig:
       service:
         namespace: {{ .Release.Namespace }}
-        name: {{ template "k8s-vault-webhook.fullname" . }}
+        name: {{ include "k8s-vault-webhook.fullname" . }}
         path: /secret
       caBundle: {{ b64enc $ca.Cert }}
     sideEffects: NoneOnDryRun
@@ -69,27 +66,22 @@ items:
   metadata:
     name: {{ include "k8s-vault-webhook.fullname" . }}
     labels:
-      app: {{ template "k8s-vault-webhook.name" . }}
-      chart: {{ .Chart.Name }}-{{ .Chart.Version }}
-      heritage: {{ .Release.Service }}
-      release: {{ .Release.Name }}
+      {{- include "k8s-vault-webhook.labels" . | nindent 6 }}
   spec:
     replicas: {{ .Values.replicaCount }}
     selector:
       matchLabels:
-        app: {{ template "k8s-vault-webhook.name" . }}
-        release: {{ .Release.Name }}
+        {{- include "k8s-vault-webhook.selectorLabels" . | nindent 8 }}
     template:
       metadata:
         labels:
-          app: {{ template "k8s-vault-webhook.name" . }}
-          release: {{ .Release.Name }}
-          caHash: {{ sha1sum "$ca.Cert" }}
+          {{- include "k8s-vault-webhook.selectorLabels" . | nindent 10 }}
       spec:
-        serviceAccountName: {{ .Values.serviceAccount }}
+        serviceAccountName: {{ include "k8s-vault-webhook.serviceAccountName" . }}
         containers:
           - name: vault-agent
-            image: vault:1.2.3
+            image: "{{ .Values.vault.agent.image.repository }}:{{ .Values.vault.agent.image.tag }}"
+            imagePullPolicy: {{ .Values.vault.agent.image.pullPolicy }}
             volumeMounts:
               - mountPath: /srv/vaultconfig
                 name: vault-agent-config
@@ -100,7 +92,7 @@ items:
             resources:
               {{- toYaml .Values.vault.agent.resources | nindent 14 }}
           - name: {{ .Chart.Name }}
-            image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+            image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
             imagePullPolicy: {{ .Values.image.pullPolicy }}
             env:
               - name: KVW_CERT
@@ -125,13 +117,13 @@ items:
               - mountPath: /srv/vaulttoken
                 name: vault-token
             ports:
-              - name: http
+              - name: https
                 containerPort: 8443
                 protocol: TCP
             readinessProbe:
               httpGet:
                 path: /status
-                port: http
+                port: https
                 scheme: HTTPS
             resources:
               {{- toYaml .Values.resources | nindent 14 }}
