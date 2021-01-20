@@ -35,17 +35,14 @@ items:
         name: {{ include "k8s-vault-webhook.fullname" . }}
         path: /secret
       caBundle: {{ b64enc $ca.Cert }}
+    admissionReviewVersions: ["v1"]
     sideEffects: NoneOnDryRun
+    timeoutSeconds: 5
     rules:
-    - operations:
-      - CREATE
-      - UPDATE
-      apiGroups:
-      - "*"
-      apiVersions:
-      - "*"
-      resources:
-      - secrets
+    - apiGroups: [""]
+      apiVersions: ["v1"]
+      operations: ["CREATE", "UPDATE"]
+      resources: ["secrets"]
     failurePolicy: {{ .Values.webhook.failurePolicy }}
     namespaceSelector:
     {{- if .Values.webhook.namespaceSelector.matchLabels }}

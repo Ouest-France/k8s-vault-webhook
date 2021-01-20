@@ -13,7 +13,7 @@ spec:
     - podSelector:
         matchLabels:
           {{ .Values.networkPolicy.matchLabel }}: {{ .Values.networkPolicy.matchValue }}
-{{ if (.Values.networkPolicy.namespaceMatchLabel) and (.Values.networkPolicy.namespaceMatchValue) }}
+{{ if and (.Values.networkPolicy.namespaceMatchLabel) (.Values.networkPolicy.namespaceMatchValue) }}
       namespaceSelector:
         matchLabels:
           {{ .Values.networkPolicy.namespaceMatchLabel }}: {{ .Values.networkPolicy.namespaceMatchValue }}
