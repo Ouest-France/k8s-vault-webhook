@@ -4,7 +4,6 @@ go 1.13
 
 require (
 	github.com/Masterminds/sprig/v3 v3.2.0
-	github.com/fsnotify/fsnotify v1.4.9 // indirect
 	github.com/go-chi/chi v1.5.1
 	github.com/go-chi/render v1.0.1
 	github.com/google/uuid v1.1.5 // indirect
@@ -28,6 +27,6 @@ require (
 	gopkg.in/ini.v1 v1.62.0 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b // indirect
-	k8s.io/api v0.0.0-20191010143144-fbf594f18f80
-	k8s.io/apimachinery v0.0.0-20191006235458-f9f2f3f8ab02
+	k8s.io/api v0.20.2
+	k8s.io/apimachinery v0.20.2
 )
