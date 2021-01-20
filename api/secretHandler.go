@@ -105,6 +105,7 @@ func (s *Server) secretHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Attach admission response to admission review
 	admissionReview.Response = &admission.AdmissionResponse{
+		UID:     admissionReview.Request.UID,
 		Allowed: true,
 		Patch:   patchBytes,
 		PatchType: func() *admission.PatchType {
