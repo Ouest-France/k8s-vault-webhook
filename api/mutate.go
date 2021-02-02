@@ -53,7 +53,7 @@ func (s *Server) mutateSecretData(secret corev1.Secret) ([]patchOperation, error
 			if val == "" {
 				logger.Errorf("secret field %s cannot be empty", key)
 				secretFailed.Inc()
-				return []patchOperation{}, fmt.Errorf("secret attribute %s cannot be empty", key)
+				return []patchOperation{}, fmt.Errorf("secret field %s cannot be empty", key)
 			}
 		}
 
@@ -104,6 +104,7 @@ func (s *Server) mutateSecretData(secret corev1.Secret) ([]patchOperation, error
 			},
 		)
 
+		// Increment secret mutated counter for prometheus metric
 		secretMutated.Inc()
 
 		logger.Info("kubernetes secret mutated with vault value")

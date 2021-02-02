@@ -1,4 +1,7 @@
-apiVersion: v1
-description: A Helm chart that deploys a kubernetes webhook to get secrets from Hashicorp Vault 
+apiVersion: v2
 name: k8svaultwebhook
-version: 0.4.3
+description: A Helm chart that deploys a kubernetes webhook to get secrets from Hashicorp Vault
+
+type: application
+version: 0.5.0
+appVersion: v0.3.0

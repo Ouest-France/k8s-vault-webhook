@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"k8s.io/api/admission/v1beta1"
+	admission "k8s.io/api/admission/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -14,8 +14,8 @@ func (s *Server) sendAdmissionReviewError(w http.ResponseWriter, err error) {
 
 	// Create empty AdmissionReview with an error
 	// set as response message
-	ar := v1beta1.AdmissionReview{
-		Response: &v1beta1.AdmissionResponse{
+	ar := admission.AdmissionReview{
+		Response: &admission.AdmissionResponse{
 			Result: &metav1.Status{
 				Message: err.Error(),
 			},
@@ -42,7 +42,7 @@ func (s *Server) sendAdmissionReviewError(w http.ResponseWriter, err error) {
 }
 
 // sendAdmissionReview masharl and write to http.ResponseWriter an admission review
-func (s *Server) sendAdmissionReview(w http.ResponseWriter, ar v1beta1.AdmissionReview) {
+func (s *Server) sendAdmissionReview(w http.ResponseWriter, ar admission.AdmissionReview) {
 
 	// Marshal Admission Rreview
 	resp, err := json.Marshal(ar)

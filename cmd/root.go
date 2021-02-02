@@ -41,18 +41,14 @@ var rootCmd = &cobra.Command{
 		}
 
 		// Check basicauth
-		validBasicauth := func() bool {
-			re := regexp.MustCompile(`^.+:.+$`)
-
-			for _, userpass := range viper.GetStringSlice("basicauth") {
-				if !re.MatchString(userpass) {
-					return false
-				}
+		re, err := regexp.Compile(`^.+:.+$`)
+		if err != nil {
+			return fmt.Errorf("failed to compile basicauth checking regex: %w", err)
+		}
+		for _, userpass := range viper.GetStringSlice("basicauth") {
+			if !re.MatchString(userpass) {
+				return errors.New("basicauth entries must match '^.+:.+$' regex")
 			}
-			return true
-		}()
-		if !validBasicauth {
-			return errors.New("basicauth entries must match '^.+:.+$' regex")
 		}
 
 		return nil

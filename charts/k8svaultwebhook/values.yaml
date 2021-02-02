@@ -1,11 +1,13 @@
 replicaCount: 2
 
-serviceAccount: k8s-vault-webhook
+serviceAccount:
+  create: true
+  # name: k8s-vault-webhook
 
 image:
   repository: ouestfrance/k8s-vault-webhook
-  tag: latest
-  pullPolicy: Always
+  tag: v0.3.0
+  pullPolicy: IfNotPresent
 
 loglevel: info
 logformat: json
@@ -16,6 +18,10 @@ vault:
   address: http://127.0.0.1:8200
   pattern: secret/data/{{.Namespace}}/{{.Secret}}
   agent:
+    image:
+      repository: vault
+      tag: latest
+      pullPolicy: Always
     mount: kubernetes
     role: k8s-vault-webhook
     resources:

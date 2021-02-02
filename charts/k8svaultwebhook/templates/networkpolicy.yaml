@@ -3,22 +3,17 @@ kind: NetworkPolicy
 apiVersion: networking.k8s.io/v1
 metadata:
   name: {{ include "k8s-vault-webhook.fullname" . }}
-  labels:
-    app: {{ template "k8s-vault-webhook.name" . }}
-    chart: {{ .Chart.Name }}-{{ .Chart.Version }}
-    heritage: {{ .Release.Service }}
-    release: {{ .Release.Name }}
+  labels: {{- include "k8s-vault-webhook.labels" . | nindent 4}}
 spec:
   podSelector:
     matchLabels:
-      app: {{ template "k8s-vault-webhook.name" . }}
-      release: {{ .Release.Name }}
+      {{- include "k8s-vault-webhook.selectorLabels" . | nindent 6 }}
   ingress:
   - from: 
     - podSelector:
         matchLabels:
           {{ .Values.networkPolicy.matchLabel }}: {{ .Values.networkPolicy.matchValue }}
-{{ if (.Values.networkPolicy.namespaceMatchLabel) and (.Values.networkPolicy.namespaceMatchValue) }}
+{{ if and (.Values.networkPolicy.namespaceMatchLabel) (.Values.networkPolicy.namespaceMatchValue) }}
       namespaceSelector:
         matchLabels:
           {{ .Values.networkPolicy.namespaceMatchLabel }}: {{ .Values.networkPolicy.namespaceMatchValue }}
