@@ -3,5 +3,5 @@ name: k8svaultwebhook
 description: A Helm chart that deploys a kubernetes webhook to get secrets from Hashicorp Vault
 
 type: application
-version: 0.5.0
-appVersion: v0.3.0
+version: 0.5.1
+appVersion: v0.3.1

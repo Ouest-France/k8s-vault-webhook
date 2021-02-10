@@ -6,7 +6,7 @@ serviceAccount:
 
 image:
   repository: ouestfrance/k8s-vault-webhook
-  tag: v0.3.0
+  tag: 0.3.1
   pullPolicy: IfNotPresent
 
 loglevel: info
