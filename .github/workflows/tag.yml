@@ -9,27 +9,43 @@ jobs:
     name: Build
     runs-on: ubuntu-latest
     steps:
-      - name: Set up Go 1.13
-        uses: actions/setup-go@v1
-        with:
-          go-version: 1.13
-        id: go
-
       - name: Get the version
         id: get_version
-        run: echo ::set-output name=VERSION::${GITHUB_REF/refs\/tags\//}
+        run: echo ::set-output name=VERSION::${GITHUB_REF/refs\/tags\/v/}
 
-      - name: Check out code into the Go module directory
-        uses: actions/checkout@v1
+      - name: Checkout
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+
+      - name: Set up Go
+        uses: actions/setup-go@v2
+        with:
+          go-version: 1.15
+
+      - name: Run Golang CI Lint
+        uses: golangci/golangci-lint-action@v2
+        with:
+          version: v1.33
 
       - name: Build
-        run: go build -o k8s-vault-webhook -ldflags="-X github.com/Ouest-France/k8s-vault-webhook/cmd.version=${{ steps.get_version.outputs.VERSION }}"
+        run: CGO_ENABLED=0 go build -ldflags="-extldflags '-static' -w -s -X github.com/Ouest-France/k8s-vault-webhook/cmd.version=${{ steps.get_version.outputs.VERSION }}" -o k8s-vault-webhook
 
-      - name: Setup Lint
-        run: curl -LO https://github.com/golangci/golangci-lint/releases/download/v1.19.1/golangci-lint-1.19.1-linux-amd64.tar.gz && tar -xf golangci-lint-1.19.1-linux-amd64.tar.gz
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1
 
-      - name: Lint
-        run: golangci-lint-1.19.1-linux-amd64/golangci-lint run
+      - name: Login to DockerHub
+        uses: docker/login-action@v1
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build and push
+        uses: docker/build-push-action@v2
+        with:
+          context: .
+          push: true
+          tags: ouestfrance/k8s-vault-webhook:${{ steps.get_version.outputs.VERSION }}
 
       - name: Upload binaries to release
         uses: svenstaro/upload-release-action@v1-release
