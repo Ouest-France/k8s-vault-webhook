@@ -18,8 +18,8 @@ type patchOperation struct {
 
 func (s *Server) secretHandler(w http.ResponseWriter, r *http.Request) {
 
-	logger := s.Logger.WithField("handler", "secret")
-	logger.Debug("request received, handling")
+	logger := s.Logger.WithFields(logrus.Fields{"handler": "secret", "ip": r.RemoteAddr})
+	logger.Info("request received, handling")
 
 	// Read request body
 	body, err := ioutil.ReadAll(r.Body)
