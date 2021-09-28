@@ -8,6 +8,7 @@ image:
   repository: ouestfrance/k8s-vault-webhook
   tag: 0.3.1
   pullPolicy: IfNotPresent
+  # imagePullSecrets: []
 
 loglevel: info
 logformat: json

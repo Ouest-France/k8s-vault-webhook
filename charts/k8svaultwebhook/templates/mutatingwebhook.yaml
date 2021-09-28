@@ -74,6 +74,10 @@ items:
         labels:
           {{- include "k8s-vault-webhook.selectorLabels" . | nindent 10 }}
       spec:
+        {{- with .Values.image.imagePullSecrets }}
+        imagePullSecrets:
+          {{- toYaml . | nindent 10 }}
+        {{- end }}
         serviceAccountName: {{ include "k8s-vault-webhook.serviceAccountName" . }}
         containers:
           - name: vault-agent
