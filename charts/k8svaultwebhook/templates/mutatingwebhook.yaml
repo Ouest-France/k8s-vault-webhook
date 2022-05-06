@@ -52,12 +52,12 @@ items:
       matchExpressions:
     {{- if .Values.webhook.namespaceSelector.matchExpressions }}
 {{ toYaml .Values.webhook.namespaceSelector.matchExpressions | indent 6 }}
-    {{- end }}
+    {{- else }}
       - key: namespace
         operator: NotIn
         values:
         - {{ .Release.Namespace }}
-
+    {{- end }}
 - apiVersion: apps/v1
   kind: Deployment
   metadata:
