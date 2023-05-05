@@ -26,7 +26,7 @@ func (s *Server) sendAdmissionReviewError(w http.ResponseWriter, err error) {
 	arResp, err := json.Marshal(ar)
 	if err != nil {
 		s.Logger.Errorf("failed to marshal response: %s", err)
-		http.Error(w, http.StatusText(500), 500)
+		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 		return
 	}
 
@@ -48,7 +48,7 @@ func (s *Server) sendAdmissionReview(w http.ResponseWriter, ar admission.Admissi
 	resp, err := json.Marshal(ar)
 	if err != nil {
 		s.Logger.Errorf("failed to marshal response: %s", err)
-		http.Error(w, http.StatusText(500), 500)
+		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 		return
 	}
 

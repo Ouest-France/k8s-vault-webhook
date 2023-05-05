@@ -103,7 +103,7 @@ func (s *Server) RequestAuth(next http.Handler) http.Handler {
 			reqUser, reqPass, ok := r.BasicAuth()
 			if !ok {
 				s.Logger.Error("authentification failed, missing credentials")
-				http.Error(w, http.StatusText(403), 403)
+				http.Error(w, http.StatusText(http.StatusForbidden), http.StatusForbidden)
 				return
 			}
 
@@ -126,7 +126,7 @@ func (s *Server) RequestAuth(next http.Handler) http.Handler {
 			}()
 			if !valid {
 				s.Logger.Error("authentication failed, invalid credentials")
-				http.Error(w, http.StatusText(403), 403)
+				http.Error(w, http.StatusText(http.StatusForbidden), http.StatusForbidden)
 				return
 			}
 		}

@@ -35,22 +35,22 @@ func (c Client) Read(path, key string) (string, error) {
 	// Read vault secret
 	secret, err := c.Client.Logical().Read(path)
 	if err != nil {
-		return "", fmt.Errorf("failed to read secret at %q: %s", path, err)
+		return fmt.Sprintf("failed to read secret at %q: %s", path, err), nil
 	}
 	if secret == nil {
-		return "", fmt.Errorf("secret %q does not exist", path)
+		return fmt.Sprintf("secret %q does not exist in Vault", path), nil
 	}
 
 	// Check data key for KV2 is present
 	_, ok := secret.Data["data"]
 	if !ok {
-		return "", fmt.Errorf("failed to read secret at %q: no data returned", path)
+		return fmt.Sprintf("failed to read secret at %q: no data returned", path), nil
 	}
 
 	// Check if requested key is present
 	data, ok := secret.Data["data"].(map[string]interface{})[key]
 	if !ok || data == nil {
-		return "", fmt.Errorf("key %q not found", key)
+		return fmt.Sprintf("key %q not found in Vault", key), nil
 	}
 
 	return data.(string), nil

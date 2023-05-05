@@ -25,7 +25,7 @@ func (s *Server) secretHandler(w http.ResponseWriter, r *http.Request) {
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		logger.WithError(err).Error("failed to read request body")
-		http.Error(w, http.StatusText(500), 500)
+		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 		secretFailed.Inc()
 		return
 	}
@@ -36,7 +36,7 @@ func (s *Server) secretHandler(w http.ResponseWriter, r *http.Request) {
 	err = json.Unmarshal(body, &admissionReview)
 	if err != nil {
 		logger.WithError(err).Error("failed to unmarshal request")
-		http.Error(w, http.StatusText(500), 500)
+		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 		secretFailed.Inc()
 		return
 	}
@@ -76,7 +76,7 @@ func (s *Server) secretHandler(w http.ResponseWriter, r *http.Request) {
 	err = json.Unmarshal(admissionReview.Request.Object.Raw, &secret)
 	if err != nil {
 		logger.WithError(err).Error("failed to unmarshal secret")
-		http.Error(w, http.StatusText(500), 500)
+		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 		secretFailed.Inc()
 		return
 	}
@@ -98,7 +98,7 @@ func (s *Server) secretHandler(w http.ResponseWriter, r *http.Request) {
 	patchBytes, err := json.Marshal(patch)
 	if err != nil {
 		logger.WithError(err).Error("failed to marshal patches")
-		http.Error(w, http.StatusText(500), 500)
+		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 		secretFailed.Inc()
 		return
 	}

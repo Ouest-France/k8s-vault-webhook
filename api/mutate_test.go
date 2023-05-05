@@ -3,6 +3,8 @@ package api
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
+	"sort"
 	"testing"
 
 	"github.com/sirupsen/logrus"
@@ -12,13 +14,18 @@ import (
 
 // Fake Vault client for testing
 type fakeVaultClient struct {
-	Value string
+	Value  string
+	Absent bool
 }
 
 // Fake Vault read method for testing
 func (f fakeVaultClient) Read(path, key string) (string, error) {
 	if f.Value == "error" {
 		return "", errors.New("failed to read key in vault")
+	}
+
+	if f.Absent {
+		return fmt.Sprintf("Secret %q does not exist in Vault", f.Value), nil
 	}
 
 	return f.Value, nil
@@ -76,15 +83,15 @@ func TestServer_mutateSecretData(t *testing.T) {
 		},
 		{
 			"Test secret that doesn't exists in vault",
-			fakeVaultClient{"error"},
+			fakeVaultClient{Absent: true, Value: "absentsecret"},
 			"secret/data/{{.Secret}}",
 			`{"metadata":{"name":"test-secret","namespace":"test-namespace","creationTimestamp":null,"annotations":{"kubectl.kubernetes.io/last-applied-configuration":"{\"apiVersion\":\"v1\",\"data\":{\"foo\":\"dmF1bHQ6Zm9vI2Jhcg==\"},\"kind\":\"Secret\",\"metadata\":{\"annotations\":{},\"name\":\"test-secret\",\"namespace\":\"test-namespace\"},\"type\":\"Opaque\"}\n"}},"data":{"foo":"dmF1bHQ6Zm9vI2Jhcg=="},"type":"Opaque"}`,
-			[]patchOperation{},
-			"failed to read secret 'secret/data/foo' in vault: failed to read key in vault",
+			[]patchOperation{{Op: "replace", Path: "/data/foo", Value: "U2VjcmV0ICJhYnNlbnRzZWNyZXQiIGRvZXMgbm90IGV4aXN0IGluIFZhdWx0"}},
+			"",
 		},
 		{
 			"Test valid secret defined in vault",
-			fakeVaultClient{"bar"},
+			fakeVaultClient{Value: "bar"},
 			"secret/data/{{.Secret}}",
 			`{"metadata":{"name":"test-secret","namespace":"test-namespace","creationTimestamp":null,"annotations":{"kubectl.kubernetes.io/last-applied-configuration":"{\"apiVersion\":\"v1\",\"data\":{\"foo\":\"dmF1bHQ6Zm9vI2Jhcg==\"},\"kind\":\"Secret\",\"metadata\":{\"annotations\":{},\"name\":\"test-secret\",\"namespace\":\"test-namespace\"},\"type\":\"Opaque\"}\n"}},"data":{"foo":"dmF1bHQ6Zm9vI2Jhcg=="},"type":"Opaque"}`,
 			[]patchOperation{{Op: "replace", Path: "/data/foo", Value: "YmFy"}},
@@ -92,7 +99,7 @@ func TestServer_mutateSecretData(t *testing.T) {
 		},
 		{
 			"Test valid secret defined in vault + one simple secret",
-			fakeVaultClient{"bar"},
+			fakeVaultClient{Value: "bar"},
 			"secret/data/{{.Secret}}",
 			`{"metadata":{"name":"test-secret","namespace":"test-namespace","creationTimestamp":null,"annotations":{"kubectl.kubernetes.io/last-applied-configuration":"{\"apiVersion\":\"v1\",\"data\":{\"foo\":\"dmF1bHQ6Zm9vI2Jhcg==\",\"simple\":\"test\"},\"kind\":\"Secret\",\"metadata\":{\"annotations\":{},\"name\":\"test-secret\",\"namespace\":\"test-namespace\"},\"type\":\"Opaque\"}\n"}},"data":{"foo":"dmF1bHQ6Zm9vI2Jhcg==","simple":"test"},"type":"Opaque"}`,
 			[]patchOperation{{Op: "replace", Path: "/data/foo", Value: "YmFy"}},
@@ -100,7 +107,7 @@ func TestServer_mutateSecretData(t *testing.T) {
 		},
 		{
 			"Test multi valid secrets defined in vault + one simple secret",
-			fakeVaultClient{"bar"},
+			fakeVaultClient{Value: "bar"},
 			"secret/data/{{.Secret}}",
 			`{"metadata":{"name":"test-secret","namespace":"test-namespace","creationTimestamp":null,"annotations":{"kubectl.kubernetes.io/last-applied-configuration":"{\"apiVersion\":\"v1\",\"data\":{\"foo\":\"dmF1bHQ6Zm9vI2Jhcg==\",\"simple\":\"test\",\"foo2\":\"dmF1bHQ6Zm9vI2JhcjI=\"},\"kind\":\"Secret\",\"metadata\":{\"annotations\":{},\"name\":\"test-secret\",\"namespace\":\"test-namespace\"},\"type\":\"Opaque\"}\n"}},"data":{"foo":"dmF1bHQ6Zm9vI2Jhcg==","simple":"test","foo2":"dmF1bHQ6Zm9vI2JhcjI="},"type":"Opaque"}`,
 			[]patchOperation{{Op: "replace", Path: "/data/foo", Value: "YmFy"}, {Op: "replace", Path: "/data/foo2", Value: "YmFy"}},
@@ -132,6 +139,14 @@ func TestServer_mutateSecretData(t *testing.T) {
 		} else {
 			require.EqualError(t, err, test.errorString, test.description)
 		}
+
+		// Sort patch and test.patch to avoid random order
+		sort.Slice(patch, func(i, j int) bool {
+			return patch[i].Path < patch[j].Path
+		})
+		sort.Slice(test.patch, func(i, j int) bool {
+			return test.patch[i].Path < test.patch[j].Path
+		})
 
 		require.Equal(t, patch, test.patch, test.description)
 	}
