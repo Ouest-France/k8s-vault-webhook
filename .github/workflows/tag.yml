@@ -27,6 +27,7 @@ jobs:
         uses: golangci/golangci-lint-action@v2
         with:
           version: latest
+          args: --timeout=3m
 
       - name: Build
         run: CGO_ENABLED=0 go build -ldflags="-extldflags '-static' -w -s -X github.com/Ouest-France/k8s-vault-webhook/cmd.version=${{ steps.get_version.outputs.VERSION }}" -o k8s-vault-webhook
