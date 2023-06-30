@@ -20,7 +20,7 @@ vault:
   pattern: secret/data/{{.Namespace}}/{{.Secret}}
   agent:
     image:
-      repository: vault
+      repository: hashicorp/vault
       tag: latest
       pullPolicy: Always
     mount: kubernetes
