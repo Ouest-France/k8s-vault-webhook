@@ -128,6 +128,9 @@ items:
                 scheme: HTTPS
             resources:
               {{- toYaml .Values.resources | nindent 14 }}
+        {{- if .Values.podSettings }}
+        {{- toYaml .Values.podSettings | nindent 8 }}
+        {{- end}}
         securityContext:
           {{- toYaml .Values.securityContext | nindent 10 }}
         volumes:

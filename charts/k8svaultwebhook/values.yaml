@@ -68,3 +68,4 @@ networkPolicy:
   # namespaceMatchValue: kube-system
 
 securityContext: {}
+podSettings: {}
